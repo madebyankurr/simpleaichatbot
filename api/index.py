@@ -1,10 +1,16 @@
 import json
 import os
+import traceback
 
 from http.server import BaseHTTPRequestHandler
 
 from google import genai
 from google.genai import types
+
+
+# =========================
+# CONFIG
+# =========================
 
 API_KEY = os.environ.get("GEMINI_API_KEY")
 
@@ -22,49 +28,81 @@ MAX_INPUT_LENGTH = 4000
 MAX_REQUEST_SIZE = 20_000
 MAX_OUTPUT_TOKENS = 1024
 
+
+# =========================
+# API HANDLER
+# =========================
+
 class handler(BaseHTTPRequestHandler):
 
     def send_json(self, status_code, data):
-        response = json.dumps(data).encode("utf-8")
+
+        response = json.dumps(
+            data
+        ).encode("utf-8")
 
         self.send_response(status_code)
+
         self.send_header(
             "Content-Type",
             "application/json; charset=utf-8"
         )
+
         self.send_header(
             "Content-Length",
             str(len(response))
         )
 
         self.end_headers()
+
         self.wfile.write(response)
 
 
-    
+    # =========================
+    # HEALTH CHECK
+    # =========================
+
     def do_GET(self):
+
         self.send_json(200, {
             "status": "online"
         })
 
 
-    
+    # =========================
+    # CHAT REQUEST
+    # =========================
+
     def do_POST(self):
 
         try:
 
+            # =========================
+            # READ REQUEST
+            # =========================
+
             content_length = int(
-                self.headers.get("Content-Length", 0)
+                self.headers.get(
+                    "Content-Length",
+                    0
+                )
             )
 
             if content_length <= 0:
+
                 return self.send_json(400, {
-                    "error": "Request body is required."
+                    "error": (
+                        "Request body is required."
+                    )
                 })
 
+
             if content_length > MAX_REQUEST_SIZE:
+
                 return self.send_json(413, {
-                    "error": "Request is too large."
+                    "error": (
+                        "Request is too large."
+                    )
                 })
 
 
@@ -72,25 +110,47 @@ class handler(BaseHTTPRequestHandler):
                 content_length
             )
 
+
             data = json.loads(
                 raw_body.decode("utf-8")
             )
 
-            message = data.get("message")
 
-            if not isinstance(message, str):
+            # =========================
+            # VALIDATE MESSAGE
+            # =========================
+
+            message = data.get(
+                "message"
+            )
+
+
+            if not isinstance(
+                message,
+                str
+            ):
+
                 return self.send_json(400, {
-                    "error": "Message must be a string."
+                    "error": (
+                        "Message must be a string."
+                    )
                 })
+
 
             message = message.strip()
 
+
             if not message:
+
                 return self.send_json(400, {
-                    "error": "Message cannot be empty."
+                    "error": (
+                        "Message cannot be empty."
+                    )
                 })
 
+
             if len(message) > MAX_INPUT_LENGTH:
+
                 return self.send_json(400, {
                     "error": (
                         f"Message cannot exceed "
@@ -98,21 +158,36 @@ class handler(BaseHTTPRequestHandler):
                     )
                 })
 
+
+            # =========================
+            # GEMINI REQUEST
+            # =========================
+
             gemini_response = (
                 client.models.generate_content(
                     model=MODEL,
                     contents=message,
                     config=types.GenerateContentConfig(
                         temperature=0.7,
-                        max_output_tokens=MAX_OUTPUT_TOKENS
+                        max_output_tokens=(
+                            MAX_OUTPUT_TOKENS
+                        )
                     )
                 )
             )
 
 
-            response_text = gemini_response.text
+            # =========================
+            # GET RESPONSE
+            # =========================
+
+            response_text = (
+                gemini_response.text
+            )
+
 
             if not response_text:
+
                 return self.send_json(502, {
                     "error": (
                         "The AI did not return "
@@ -120,10 +195,19 @@ class handler(BaseHTTPRequestHandler):
                     )
                 })
 
+
+            # =========================
+            # SUCCESS
+            # =========================
+
             return self.send_json(200, {
                 "response": response_text
             })
 
+
+        # =========================
+        # INVALID JSON
+        # =========================
 
         except json.JSONDecodeError:
 
@@ -132,13 +216,23 @@ class handler(BaseHTTPRequestHandler):
             })
 
 
+        # =========================
+        # DEBUG ERROR
+        # =========================
+
         except Exception as error:
 
-    import traceback
+            print(
+                "GEMINI ERROR:",
+                repr(error)
+            )
 
-    print("GEMINI ERROR:", repr(error))
-    traceback.print_exc()
+            traceback.print_exc()
 
-    return self.send_json(500, {
-        "error": str(error)
-    })
+
+            # TEMPORARY:
+            # Return actual error so we
+            # can diagnose Gemini/Vercel.
+            return self.send_json(500, {
+                "error": str(error)
+            })
