@@ -133,14 +133,12 @@ class handler(BaseHTTPRequestHandler):
 
 
         except Exception as error:
-          
-            print(
-                f"Server error: {error}"
-            )
 
-            return self.send_json(500, {
-                "error": (
-                    "Something went wrong. "
-                    "Please try again."
-                )
-            })
+    import traceback
+
+    print("GEMINI ERROR:", repr(error))
+    traceback.print_exc()
+
+    return self.send_json(500, {
+        "error": str(error)
+    })
