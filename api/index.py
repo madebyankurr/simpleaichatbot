@@ -22,7 +22,7 @@ if not API_KEY:
 
 client = genai.Client(api_key=API_KEY)
 
-MODEL = "gemini-2.5-flash"
+MODEL = "gemini-3.6-flash"
 
 MAX_INPUT_LENGTH = 4000
 MAX_REQUEST_SIZE = 20_000
