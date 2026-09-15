@@ -3,43 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Simple AI Chatbot</title>
-
+    <title>AI Assistant - School Project</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-    <main class="chat-container">
-
-        <h1>Simple AI Chatbot</h1>
-
-        <div id="chat">
-            <div class="message ai">
-                Hey! Send a message to test the AI.
+    <div class="app-layout">
+        <!-- Top Navigation Header -->
+        <header class="app-header">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12A10 10 0 0 1 12 2z"/>
+                        <path d="M12 8v4l3 3"/>
+                        <path d="M18 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                        <path d="M6 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">AI Assistant</span>
+                    <span class="brand-badge">Gemini 3.6 Flash</span>
+                </div>
             </div>
-        </div>
 
-        <form id="chat-form">
+            <div class="header-actions">
+                <div id="status-indicator" class="status-badge offline" title="Backend Status">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Connecting...</span>
+                </div>
+                <button id="clear-btn" class="btn-icon" title="Clear Chat History">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                    <span>Clear</span>
+                </button>
+            </div>
+        </header>
 
-            <input
-                id="message-input"
-                type="text"
-                placeholder="Type a message..."
-                autocomplete="off"
-                required
-            >
+        <!-- Main Chat Area -->
+        <main class="chat-wrapper">
+            <!-- Welcome View (Shown when chat is empty) -->
+            <div id="welcome-view" class="welcome-container">
+                <div class="welcome-badge">School AI Project</div>
+                <h1>How can I help you today?</h1>
+                <p class="welcome-subtitle">Ask questions, request summaries, solve code problems, or brainstorm ideas.</p>
 
-            <button type="submit">
-                Send
+                <div class="suggestions-grid">
+                    <button class="suggestion-card" data-prompt="Explain quantum computing in simple terms for a high school student.">
+                        <div class="card-icon">⚡</div>
+                        <div class="card-text">
+                            <strong>Explain a concept</strong>
+                            <span>Quantum computing for beginners</span>
+                        </div>
+                    </button>
+                    <button class="suggestion-card" data-prompt="Help me brainstorm topic ideas for a science research project.">
+                        <div class="card-icon">💡</div>
+                        <div class="card-text">
+                            <strong>Brainstorm Ideas</strong>
+                            <span>Topics for a science research project</span>
+                        </div>
+                    </button>
+                    <button class="suggestion-card" data-prompt="Write a Python script that checks if a string is a palindrome and explain how it works.">
+                        <div class="card-icon">💻</div>
+                        <div class="card-text">
+                            <strong>Code Assistance</strong>
+                            <span>Python palindrome checker with explanation</span>
+                        </div>
+                    </button>
+                    <button class="suggestion-card" data-prompt="Give me 5 practical study techniques to improve focus and retention.">
+                        <div class="card-icon">📚</div>
+                        <div class="card-text">
+                            <strong>Study Tips</strong>
+                            <span>5 effective techniques to improve focus</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div id="chat" class="chat-messages">
+                <!-- Messages populated via JS -->
+            </div>
+
+            <button id="scroll-bottom-btn" class="scroll-bottom-btn hidden" title="Scroll to bottom">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <polyline points="19 12 12 19 5 12"></polyline>
+                </svg>
             </button>
+        </main>
 
-        </form>
+        <!-- Input Bar Area -->
+        <footer class="input-container">
+            <form id="chat-form" class="chat-form">
+                <div class="input-wrapper">
+                    <textarea 
+                        id="message-input" 
+                        placeholder="Ask anything... (Press Shift+Enter for newline)" 
+                        rows="1"
+                        maxlength="4000"
+                        required></textarea>
+                    
+                    <div class="input-footer">
+                        <span id="char-counter" class="char-counter">0 / 4000</span>
+                        <button type="submit" id="send-btn" class="send-btn" disabled title="Send Message">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </form>
+            <div class="disclaimer">
+                <span>AI can make mistakes. Built for AI Chatbot School Project.</span>
+            </div>
+        </footer>
+    </div>
 
-    </main>
+    <!-- Toast notification container -->
+    <div id="toast" class="toast hidden"></div>
 
     <script src="app.js"></script>
-
 </body>
 </html>
